@@ -18,6 +18,11 @@ spring:
     enabled: true
     locations: classpath:db/migration
     fail-on-missing-locations: false
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,caches,metrics
 app:
   security:
     jwt:
@@ -26,3 +31,7 @@ app:
     admin:
       email: ${ADMIN_EMAIL:}
       password: ${ADMIN_PASSWORD:}
+  catalog:
+    cache:
+      ttl: 10m
+      max-size: 1000
