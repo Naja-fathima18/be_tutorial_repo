@@ -24,6 +24,13 @@ management:
       exposure:
         include: health,info,caches,metrics
 app:
+  security:
+    jwt:
+      secret: ${JWT_SECRET}
+      ttl: PT15M
+    admin:
+      email: ${ADMIN_EMAIL:}
+      password: ${ADMIN_PASSWORD:}
   catalog:
     cache:
       ttl: 10m
