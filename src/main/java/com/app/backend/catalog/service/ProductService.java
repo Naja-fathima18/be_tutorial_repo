@@ -11,7 +11,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -47,7 +46,7 @@ public class ProductService {
         return ProductView.from(saved);
     }
 
-    @Cacheable(cacheNames = PRODUCTS_CACHE, key = "#id")
+    @Cacheable(cacheNames = PRODUCTS_CACHE, key = "#id", sync = true)
     @Transactional(readOnly = true)
     public ProductView get(long id) {
         return ProductView.from(findProduct(id));
@@ -61,7 +60,7 @@ public class ProductService {
                 .map(ProductView::from);
     }
 
-    @CachePut(cacheNames = PRODUCTS_CACHE, key = "#id")
+    @CacheEvict(cacheNames = PRODUCTS_CACHE, key = "#id")
     @Transactional
     public ProductView update(long id, ProductCommand command) {
         Product product = findProduct(id);
