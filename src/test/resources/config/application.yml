@@ -1,0 +1,4 @@
+app:
+  security:
+    jwt:
+      secret: test-only-signing-key-not-for-production-use-0123456789
