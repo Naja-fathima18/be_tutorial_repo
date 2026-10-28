@@ -81,7 +81,7 @@ class ProductCatalogIT {
     }
 
     @Test
-    void lookupAfterUpdateReturnsFreshDataFromCache() throws Exception {
+    void lookupAfterUpdateReloadsFreshDataOnceAndCachesIt() throws Exception {
         long id = createProduct("Old Kettle", "it-update", "30.00", 3, "4.0");
         mockMvc.perform(get("/api/products/{id}", id))
                 .andExpect(jsonPath("$.name").value("Old Kettle"));
@@ -101,7 +101,9 @@ class ProductCatalogIT {
                 .andExpect(jsonPath("$.name").value("New Kettle"))
                 .andExpect(jsonPath("$.price").value(35.5))
                 .andExpect(jsonPath("$.stock").value(7));
-        verify(productRepository, times(0)).findById(id);
+        mockMvc.perform(get("/api/products/{id}", id))
+                .andExpect(jsonPath("$.name").value("New Kettle"));
+        verify(productRepository, times(1)).findById(id);
     }
 
     @Test
