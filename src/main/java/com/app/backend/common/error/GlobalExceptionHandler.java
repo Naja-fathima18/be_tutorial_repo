@@ -20,6 +20,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.validation.Errors;
 import org.springframework.validation.method.ParameterErrors;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -67,13 +68,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-        List<FieldErrorResponse> errors = new ArrayList<>();
-        ex.getBindingResult()
-                .getFieldErrors()
-                .forEach(error -> errors.add(new FieldErrorResponse(error.getField(), error.getDefaultMessage())));
-        ex.getBindingResult()
-                .getGlobalErrors()
-                .forEach(error -> errors.add(new FieldErrorResponse(error.getObjectName(), error.getDefaultMessage())));
+        List<FieldErrorResponse> errors = bindingErrors(ex.getBindingResult());
         return validationProblem(ex, errors, request);
     }
 
@@ -83,10 +78,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         List<FieldErrorResponse> errors = new ArrayList<>();
         ex.getParameterValidationResults().forEach(result -> {
             if (result instanceof ParameterErrors beanErrors) {
-                beanErrors
-                        .getFieldErrors()
-                        .forEach(error ->
-                                errors.add(new FieldErrorResponse(error.getField(), error.getDefaultMessage())));
+                errors.addAll(bindingErrors(beanErrors));
             } else {
                 String name = result.getMethodParameter().getParameterName();
                 result.getResolvableErrors()
@@ -137,6 +129,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, VALIDATION_FAILED);
         body.setProperty("errors", errors);
         return handleExceptionInternal(ex, body, new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+    }
+
+    private static List<FieldErrorResponse> bindingErrors(Errors bindingErrors) {
+        List<FieldErrorResponse> errors = new ArrayList<>();
+        bindingErrors
+                .getFieldErrors()
+                .forEach(error -> errors.add(new FieldErrorResponse(error.getField(), error.getDefaultMessage())));
+        bindingErrors
+                .getGlobalErrors()
+                .forEach(error -> errors.add(new FieldErrorResponse(error.getObjectName(), error.getDefaultMessage())));
+        return errors;
     }
 
     private static String leafName(ConstraintViolation<?> violation) {
